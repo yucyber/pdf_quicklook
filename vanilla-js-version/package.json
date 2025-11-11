@@ -1,0 +1,23 @@
+{
+  "name": "vanilla-js-pdf-viewer",
+  "version": "1.0.0",
+  "description": "A vanilla JavaScript PDF viewer plugin",
+  "main": "src/pdf-viewer.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npx serve example",
+    "build": "echo 'No build needed for vanilla JS'"
+  },
+  "keywords": [
+    "pdf",
+    "viewer",
+    "javascript",
+    "vanilla-js"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "pdfjs-dist": "^3.11.174"
+  }
+}
+

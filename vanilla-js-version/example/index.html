@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>原生JS PDF预览器 - 示例</title>
+  <link rel="stylesheet" href="../src/pdf-viewer.css">
+  <!-- PDF.js CDN 引入顺序要在pdf-viewer.js之前 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+
+    .demo-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .demo-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .demo-header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .demo-header p {
+      opacity: 0.9;
+      font-size: 0.9rem;
+    }
+
+    .demo-controls {
+      padding: 1rem 2rem;
+      background-color: white;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .demo-btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
+
+    .demo-btn-primary {
+      background-color: #667eea;
+      color: white;
+    }
+
+    .demo-btn-primary:hover {
+      background-color: #5568d3;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .demo-btn-secondary {
+      background-color: #f0f0f0;
+      color: #333;
+    }
+
+    .demo-btn-secondary:hover {
+      background-color: #e0e0e0;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .demo-main {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #pdf-viewer {
+      width: 100%;
+      height: 100%;
+    }
+
+    .info-box {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background-color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      max-width: 300px;
+      display: none;
+    }
+
+    .info-box.show {
+      display: block;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .info-box h3 {
+      margin-bottom: 0.5rem;
+      color: #667eea;
+      font-size: 1rem;
+    }
+
+    .info-box p {
+      font-size: 0.85rem;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .demo-header h1 {
+        font-size: 1.2rem;
+      }
+
+      .demo-controls {
+        padding: 1rem;
+      }
+
+      .info-box {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <header class="demo-header">
+      <h1>📄 原生JavaScript PDF预览器</h1>
+      <p>基于 PDF.js 的轻量级 PDF 查看器 | 无需框架依赖</p>
+    </header>
+
+    <div class="demo-controls">
+      <input type="file" id="fileInput" class="file-input" accept=".pdf">
+      <button class="demo-btn demo-btn-primary" onclick="document.getElementById('fileInput').click()">
+        选择PDF文件
+      </button>
+      <button class="demo-btn demo-btn-secondary" onclick="loadSamplePdf()">
+        加载示例PDF
+      </button>
+      <button class="demo-btn demo-btn-secondary" onclick="toggleInfo()">
+        快捷键说明
+      </button>
+    </div>
+
+    <main class="demo-main">
+      <div id="pdf-viewer"></div>
+    </main>
+
+    <div id="infoBox" class="info-box">
+      <h3>⌨️ 键盘快捷键</h3>
+      <p>
+        <strong>←/→</strong> - 上一页/下一页<br>
+        <strong>+/-</strong> - 放大/缩小<br>
+        <strong>0</strong> - 重置缩放<br>
+        <strong>Enter</strong> - 跳转页面（输入页码后）
+      </p>
+    </div>
+  </div>
+
+  <!-- pdf-viewer.js 必须在PDF.js之后引入 -->
+  <script src="../src/pdf-viewer.js"></script>
+  <script>
+    let viewer = null
+
+    // 初始化查看器
+    function initViewer(url) {
+      if (viewer) {
+        viewer.destroy()
+      }
+
+      viewer = new PdfViewer({
+        container: '#pdf-viewer',
+        url: url,
+        scale: 1.5,
+        onLoad: (numPages) => {
+          console.log(`PDF加载成功，共 ${numPages} 页`)
+          showNotification(`PDF加载成功！共 ${numPages} 页`)
+        },
+        onError: (error) => {
+          console.error('PDF加载失败:', error)
+          alert('PDF加载失败，请检查文件')
+        },
+        onPageChange: (pageNum) => {
+          console.log(`当前页: ${pageNum}`)
+        }
+      })
+    }
+
+    // 文件选择处理
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0]
+      if (file && file.type === 'application/pdf') {
+        const url = URL.createObjectURL(file)
+        initViewer(url)
+      } else {
+        alert('请选择有效的PDF文件')
+      }
+    })
+
+    // 加载示例PDF
+    window.loadSamplePdf = () => {
+      const sampleUrl = 'https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf'
+      initViewer(sampleUrl)
+    }
+
+    // 切换信息框
+    window.toggleInfo = () => {
+      const infoBox = document.getElementById('infoBox')
+      infoBox.classList.toggle('show')
+    }
+
+    // 显示通知
+    function showNotification(message) {
+      // 可以添加更友好的通知UI
+      console.log(message)
+    }
+
+    // 页面加载时显示提示
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const infoBox = document.getElementById('infoBox')
+        infoBox.classList.add('show')
+        setTimeout(() => {
+          infoBox.classList.remove('show')
+        }, 3000)
+      }, 1000)
+    })
+  </script>
+</body>
+</html>
+

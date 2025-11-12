@@ -1,5 +1,5 @@
 {
-  "name": "vue3-pdf-viewer",
+  "name": "@yucyber/vue3-pdf-viewer",
   "version": "1.0.0",
   "type": "module",
   "description": "A modern PDF viewer component built with Vue 3",

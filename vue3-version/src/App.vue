@@ -2,11 +2,20 @@
   <div class="app-container">
     <header class="app-header">
       <h1>📄 Vue3 PDF预览器 </h1>
+      <div class="view-switcher">
+        <button :class="['switch-btn', { active: currentView === 'pure' }]" @click="currentView = 'pure'">
+          普通分页模式
+        </button>
+        <button :class="['switch-btn', { active: currentView === 'virtual' }]" @click="currentView = 'virtual'">
+          🚀 虚拟滚动模式 (New)
+        </button>
+      </div>
     </header>
 
     <main class="app-main">
       <!-- 使用纯组件进行基础验证 -->
-      <PDFViewerPure />
+      <PDFViewerPure v-if="currentView === 'pure'" />
+      <VirtualPDFViewer v-else />
     </main>
   </div>
 </template>
@@ -15,6 +24,9 @@
 import { ref } from 'vue'
 // 引入纯PDF组件进行验证
 import PDFViewerPure from './components/PDFViewerPure.vue'
+import VirtualPDFViewer from './components/VirtualPDFViewer.vue'
+
+const currentView = ref('virtual') // 默认展示新功能
 </script>
 
 <style scoped>
@@ -28,7 +40,7 @@ import PDFViewerPure from './components/PDFViewerPure.vue'
 .app-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 1.5rem 2rem;
+  padding: 1rem 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
@@ -37,9 +49,40 @@ import PDFViewerPure from './components/PDFViewerPure.vue'
   gap: 1rem;
 }
 
+.view-switcher {
+  display: flex;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.switch-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.switch-btn.active {
+  background: white;
+  color: #667eea;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.switch-btn:hover:not(.active) {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .app-header h1 {
   font-size: 1.5rem;
   font-weight: 600;
+  margin: 0;
 }
 
 .file-upload {
